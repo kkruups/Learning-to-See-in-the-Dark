@@ -13,6 +13,9 @@ import glob
 
 input_dir = './dataset/Sony/short/'
 gt_dir = './dataset/Sony/long/'
+#dir for checkpoint file -- a binary file 
+#                           which contains all the values of the weights, biases, gradients and all the other variables saved. 
+#                           This file has an extension .ckpt
 checkpoint_dir = './result_Sony/'
 result_dir = './result_Sony/'
 
