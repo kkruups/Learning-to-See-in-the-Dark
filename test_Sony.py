@@ -3,21 +3,28 @@
 from __future__ import division
 import os,time,scipy.io
 import tensorflow as tf
-import tensorflow.contrib.slim as slim
+import tensorflow.contrib.slim as slim   #TF-Slim is a library that makes building, training and evaluation neural networks simple
+                                         #  https://github.com/tensorflow/tensorflow/tree/master/tensorflow/contrib/slim 
 from tensorflow.contrib.layers.python.layers import initializers
 import numpy as np
-import pdb
-import rawpy
-import glob
+import pdb    # python debugger
+import rawpy  # rawpy is an easy-to-use Python wrapper for the LibRaw library
+import glob   # glob module finds all the pathnames matching a 
+              #  specified pattern according to the rules used by the Unix shell, although results are returned in arbitrary order.
 
-
+#short exposure image dir
 input_dir = './dataset/Sony/short/'
+#ground truth -- long exposure image dir
 gt_dir = './dataset/Sony/long/'
+#model graph and checkpoint file dir
 checkpoint_dir = './checkpoint/Sony/'
+#results dir
 result_dir = './result_Sony/'
 
 #get train and test IDs
+#image filenames  ex'   "./Sony/long/00001_00_10s.ARW ISO200 F8"
 train_fns = glob.glob(gt_dir + '0*.ARW')
+#image ids ex: 00001
 train_ids = []
 for i in range(len(train_fns)):
     _, train_fn = os.path.split(train_fns[i])
@@ -32,7 +39,7 @@ for i in range(len(test_fns)):
 
 
 ps = 512 #patch size for training
-save_freq = 500
+save_freq = 500  #how often to save data/mmodel???
 
 DEBUG = 0
 if DEBUG == 1:
@@ -41,13 +48,15 @@ if DEBUG == 1:
   test_ids = test_ids[0:5]
 
 
-
+#leaky rectifier activation function
 def lrelu(x):
     return tf.maximum(x*0.2,x)
-
+#Upsampling image and video files usually leads to pixelation and soft textures
+#ai upsampling capable of creating high-definition versions of low-resolution images, using artificial intelligence? Used here?
 def upsample_and_concat(x1, x2, output_channels, in_channels):
 
     pool_size = 2
+    #Outputs random values from a truncated normal distribution
     deconv_filter = tf.Variable(tf.truncated_normal( [pool_size, pool_size, output_channels, in_channels], stddev=0.02))
     deconv = tf.nn.conv2d_transpose(x1, deconv_filter, tf.shape(x2) , strides=[1, pool_size, pool_size, 1] )
 
@@ -56,6 +65,7 @@ def upsample_and_concat(x1, x2, output_channels, in_channels):
 
     return deconv_output
 
+#Create Network Layers/Stacking layers
 def network(input):
     conv1=slim.conv2d(input,32,[3,3], rate=1, activation_fn=lrelu,scope='g_conv1_1')
     conv1=slim.conv2d(conv1,32,[3,3], rate=1, activation_fn=lrelu,scope='g_conv1_2')
